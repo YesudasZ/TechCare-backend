@@ -9,8 +9,13 @@ const userSchema = new mongoose.Schema({
   profilePicture: { type: String },
   role: { type: String, default: "user" },
   isVerified: { type: Boolean, default: false },
+  isAuthorised: { type: Boolean, default: false },
   otp: { type: String },
   otpExpires: { type: Date },
+  registrationNo: {type: String},
+  aadharNo:{type:String},
+  aadharPicture:{type:String},
+  certificatePicture:{type:String},
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
