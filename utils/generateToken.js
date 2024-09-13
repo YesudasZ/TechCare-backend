@@ -12,7 +12,7 @@ const generateToken = (res, userId) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     sameSite: "Lax",
-    maxAge: 15 * 60 * 1000,
+    maxAge: 24* 60 * 60 * 1000,
   });
 
   res.cookie("refreshToken", refreshToken, {
