@@ -1,88 +1,80 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User.js");
-
+const generateToken = require("../utils/generateToken.js"); 
 const protect = async (req, res, next) => {
-  let token = req.cookies.accessToken;
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-      const user = await User.findById(decoded.userId).select("-password");
+  const accessToken = req.cookies.accessToken;
+  const refreshToken = req.cookies.refreshToken;
 
-      if (!user) {
-        res.status(401).json({ message: "Not authorized, invalid token" });
-      }
+  if (!accessToken && !refreshToken) {
+    return res.status(401).json({ message: "Not authorized, no tokens provided" });
+  }
 
-      if (!user.isVerified) {
+  try {
+
+    const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET);
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ message: "Not authorized, user not found" });
+    }
+
+    if (!user.isVerified) {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      return res.status(403).json({ message: "Your account is not authorized. Please contact support." });
+    }
+
+    req.user = user;
+    next();
+  } catch (accessError) {
+    if (accessError.name === 'TokenExpiredError' && refreshToken) {
+      try {
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+        const user = await User.findById(decoded.userId).select("-password");
+
+        if (!user) {
+          return res.status(401).json({ message: "Not authorized, user not found" });
+        }
+
+        if (!user.isVerified) {
+          res.clearCookie("accessToken");
+          res.clearCookie("refreshToken");
+          return res.status(403).json({ message: "Your account is not authorized. Please contact support." });
+        }
+
+        generateToken(res, user._id);
+        
+        req.user = user;
+        next();
+      } catch (refreshError) {
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken");
-
-        res
-          .status(403)
-          .json({
-            message: "Your account has been blocked. Please contact support.",
-          });
-        return;
+        return res.status(401).json({ message: "Not authorized, please login again" });
       }
-
-      req.user = user;
-      next();
-    } catch (err) {
-      console.log(err);
-      res.status(401).json({ message: "Not authorized, invalid token" });
+    } else {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      return res.status(401).json({ message: "Not authorized, invalid token" });
     }
-  } else {
-    res.status(401);
-    throw new Error("Not authorized, no token");
   }
 };
 
 const protectTechnician = async (req, res, next) => {
-  let token = req.cookies.accessToken;
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-      const user = await User.findById(decoded.userId).select("-password");
 
-      if (!user) {
-        res.status(401);
-        throw new Error("Not authorized, technician not found");
-      }
-
-      if (user.role !== "technician") {
-        res
-          .status(403)
-          .json({ message: "Not authorized, user is not a technician" });
-      }
-
-      if (!user.isVerified) {
-        res.clearCookie("accessToken");
-        res.clearCookie("refreshToken");
-        res
-          .status(403)
-          .json({
-            message:
-              "Your account is not verified or authorized. Please contact support.",
-          });
-        return;
-      }
-
-      req.user = user;
-      next();
-    } catch (err) {
-      console.log(err);
-      res.status(403).json({ message: "Not authorized, invalid token" });
+  protect(req, res, () => {
+  
+    if (req.user.role !== "technician") {
+      return res.status(403).json({ message: "Not authorized, user is not a technician" });
     }
-  } else {
-    res.status(401).json({ message: "Not authorized, invalid token" });
-  }
+    next();
+  });
 };
 
 const verifyAdmin = (req, res, next) => {
-  if (req.user && req.user.role == "admin") {
-    next();
-  } else {
-    res.status(401).json({ message: "Not authorized as an admin" });
+  if (req.user && req.user.role === "admin") {
+    return next();
   }
+  return res.status(401).json({ message: "Not authorized as an admin" });
 };
 
 module.exports = { protect, verifyAdmin, protectTechnician };

@@ -73,54 +73,27 @@ const serviceSchema = new Schema({
   paymentMethod: {
     type: String,
   },
+  paymentId: {
+    type: String,
+  },
+  reason: {
+    type: String,
+  },
   additionalCharges: {
     type: Number,
     default: 0,
   },
-  notes: {
-    type: String,
-  },
-  rating: {
-    type: Number,
-    min: 1,
-    max: 5,
-  },
   feedback: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: "Feedback",
   },
-  chat: [
-    {
-      sender: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-      message: {
-        type: String,
-        required: true,
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
-  notifications: [
-    {
-      message: {
-        type: String,
-        required: true,
-      },
-      read: {
-        type: Boolean,
-        default: false,
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
+  report: {
+    type: Schema.Types.ObjectId,
+    ref: "Report",
+  },
+  chats: [{ type: Schema.Types.ObjectId, ref: "Chat" }],
+  notifications: [{ type: Schema.Types.ObjectId, ref: "Notification" }],
+  isPayTechnician: { type: Boolean, default: false },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -129,11 +102,6 @@ const serviceSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-});
-
-serviceSchema.pre("save", function (next) {
-  this.updatedAt = Date.now();
-  next();
 });
 
 const Service = mongoose.model("Service", serviceSchema);

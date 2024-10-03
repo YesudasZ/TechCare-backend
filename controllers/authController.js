@@ -6,17 +6,14 @@ const generateToken = require("../utils/generateToken");
 const { OAuth2Client } = require("google-auth-library");
 const axios = require("axios");
 const Address = require("../models/Address");
-const cloudinary = require("../utils/cloudinary.js"); 
-
+const cloudinary = require("../utils/cloudinary.js");
 
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   "http://localhost:5173"
 );
-
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000);
-
 let transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -24,15 +21,6 @@ let transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
-// const securePassword = async (password) => {
-//   try {
-//     const passwordHash = await bcrypt.hash(password, 10);
-//     return passwordHash;
-//   } catch (error) {
-//     console.log(error.message);
-//   }
-// };
 
 const signup = async (req, res) => {
   try {
@@ -100,47 +88,8 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-// const login = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//     const user = await User.findOne({ email });
-
-//     if (!user) {
-//       return res.status(400).json({ message: "Invalid credentials" });
-//     }
-
-//     if (!user.isVerified) {
-//       return res
-//         .status(400)
-//         .json({ message: "Please verify your email first" });
-//     }
-
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) {
-//       return res.status(400).json({ message: "Invalid credentials" });
-//     }
-
-//     generateToken(res, user._id);
-//     res.status(200).json({
-//       message: "Login successful",
-//       user: {
-//         id: user._id,
-//         firstName: user.firstName,
-//         lastName: user.lastName,
-//         email: user.email,
-//         phoneNumber: user.phoneNumber,
-//         profilePicture:user.profilePicture || '',
-//         role: user.role,
-//       },
-//     });
-//   } catch (error) {
-//     console.log(error.message);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-
 const login = async (req, res) => {
+  console.log("test loging");
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -152,8 +101,12 @@ const login = async (req, res) => {
     if (!user.isVerified) {
       return res
         .status(400)
-        .json({ message: "Your account is not verified or authorized. Please contact support." });
+        .json({
+          message:
+            "Your account is not verified or authorized. Please contact support.",
+        });
     }
+    
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -168,18 +121,19 @@ const login = async (req, res) => {
       lastName: user.lastName,
       email: user.email,
       phoneNumber: user.phoneNumber,
-      profilePicture: user.profilePicture || '',
+      profilePicture: user.profilePicture || "",
       role: user.role,
     };
 
-    if (user.role === 'technician') {
+    if (user.role === "technician") {
       responseUser.aadharNo = user.aadharNo;
       responseUser.registrationNo = user.registrationNo;
       responseUser.aadharPicture = user.aadharPicture;
       responseUser.certificatePicture = user.certificatePicture;
       responseUser.isProfileComplete = user.isProfileComplete;
+      responseUser.isAuthorised = user.isAuthorised;
+      responseUser.serviceCategoryId = user.serviceCategoryId;
     }
-
     res.status(200).json({
       message: "Login successful",
       user: responseUser,
@@ -204,21 +158,31 @@ const refreshToken = async (req, res) => {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    const accessToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_ACCESS_SECRET,
-      {
-        expiresIn: "15m",
-      }
-    );
+    generateToken(res, user._id);
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      sameSite: "Lax",
-      maxAge: 15 * 60 * 1000,
+    const responseUser = {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      profilePicture: user.profilePicture || "",
+      role: user.role,
+    };
+
+    if (user.role === "technician") {
+      responseUser.aadharNo = user.aadharNo;
+      responseUser.registrationNo = user.registrationNo;
+      responseUser.aadharPicture = user.aadharPicture;
+      responseUser.certificatePicture = user.certificatePicture;
+      responseUser.isProfileComplete = user.isProfileComplete;
+      responseUser.isAuthorised = user.isAuthorised;
+      responseUser.serviceCategoryId = user.serviceCategoryId;
+    }
+    res.status(200).json({
+    
+      user: responseUser,
     });
-
-    res.status(200).json({ message: "Token refreshed" });
   } catch (error) {
     res.status(401).json({ message: "Invalid token" });
   }
@@ -232,7 +196,6 @@ const initiateForgetPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     const otp = generateOTP();
     console.log(otp);
     const hashedOtp = await bcrypt.hash(otp.toString(), 10);
@@ -339,7 +302,6 @@ const googleAuth = async (req, res) => {
     );
 
     const { email, given_name, family_name } = googleUser.data;
-    // console.log("testing", googleUser.data);
     let user = await User.findOne({ email });
     if (!user) {
       user = await User.create({
@@ -358,7 +320,8 @@ const googleAuth = async (req, res) => {
 
     if (role === "technician" && !user.isProfileComplete) {
       return res.status(200).json({
-        message: "Technician authentication successful. Please complete your profile.",
+        message:
+          "Technician authentication successful. Please complete your profile.",
         user: {
           id: user._id,
           firstName: user.firstName,
@@ -370,7 +333,7 @@ const googleAuth = async (req, res) => {
         },
       });
     }
-    
+
     res.status(200).json({
       message: "User authenticated successfully",
       user: {
@@ -389,8 +352,6 @@ const googleAuth = async (req, res) => {
       .json({ message: "Server error during Google authentication" });
   }
 };
-
-
 
 const logout = async (req, res) => {
   try {
@@ -437,48 +398,7 @@ const updateProfile = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
-}; 
-
-const addAddress = async (req, res) => {
-  try {
-    const { street, city, state, country, postalCode, phoneNumber, addressId } =
-      req.body;
-    const userId = req.user.id;
-
-    let address;
-
-    if (addressId) {
-      address = await Address.findOneAndUpdate(
-        { _id: addressId, user: userId },
-        { street, city, state, country, postalCode, phoneNumber },
-        { new: true }
-      );
-      if (!address) {
-        console.log("lsjldkfjl");
-         
-        return res.status(404).json({ message: "Address not found" });
-      }
-    } else {
-      address = await Address.create({
-        user: userId,
-        street,
-        city,
-        state,
-        country,
-        postalCode,
-        phoneNumber,
-      });
-    }
-
-    res.status(200).json({ message: "Address updated successfully", address });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
 };
-
-
-
 
 const updateAddress = async (req, res) => {
   try {
@@ -496,7 +416,7 @@ const updateAddress = async (req, res) => {
       );
       if (!address) {
         console.log("lsjldkfjl");
-        
+
         return res.status(404).json({ message: "Address not found" });
       }
     } else {
@@ -617,5 +537,4 @@ module.exports = {
   deleteAddress,
   updatePassword,
   updateProfilePicture,
- 
 };
