@@ -252,6 +252,37 @@ const getWalletBalance = async (req, res) =>{
     }
   };
 
+  const handleWalletPayment = async (req, res) => {
+    try {
+      const { amount, serviceId, serviceName } = req.body;
+      const user = req.user;
+
+      const wallet = await Wallet.findOne({ user: user._id });
+      if (!wallet || wallet.balance < amount) {
+        return res.status(400).json({ message: "Insufficient wallet balance" });
+      }
+
+      wallet.balance -= amount;
+      const transaction = new Transaction({
+        user: user._id,
+        type: "debit",
+        amount,
+        description: `Payment for service ${serviceName}`,
+        service: serviceId,
+      });
+  
+      await transaction.save();
+      wallet.transactions.push(transaction);
+      await wallet.save();
+  
+      res.status(200).json({ success: true, message: "Payment successful" });
+    } catch (error) {
+      console.error("Wallet payment error:", error);
+      res.status(500).json({ message: "Payment failed", error });
+    }
+  };
+  
+
   module.exports = {
     createService,
     verifyRazorpay,
@@ -261,5 +292,6 @@ const getWalletBalance = async (req, res) =>{
     getAdminWalletTransactions,
     processTechnicianPayment,
     getTechnicianWalletBalance,
-    getTechnicianWalletTransactions
+    getTechnicianWalletTransactions,
+    handleWalletPayment
   };

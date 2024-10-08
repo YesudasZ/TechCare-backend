@@ -31,6 +31,10 @@ const io = new Server(server, {
   cors: corsOptions,
 });
 
+app.get("/", (req, res) => {
+  res.json({message: "TechCare server starts"})
+})
+
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/technician", technicianRoutes);

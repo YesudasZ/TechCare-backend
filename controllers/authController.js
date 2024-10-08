@@ -401,6 +401,8 @@ const updateProfile = async (req, res) => {
 };
 
 const updateAddress = async (req, res) => {
+  console.log("TEsting for pro");
+  
   try {
     const { street, city, state, country, postalCode, phoneNumber, addressId } =
       req.body;

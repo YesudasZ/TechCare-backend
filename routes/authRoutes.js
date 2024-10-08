@@ -44,7 +44,8 @@ const{
   createService, 
   verifyRazorpay, 
   getWalletBalance,
-  getWalletTransactions
+  getWalletTransactions,
+  handleWalletPayment
 } = require('../controllers/paymentController')
 
 const { protect } = require('../middlewares/authmiddleware');
@@ -65,13 +66,13 @@ router.get('/status', checkAuthStatus);
 router.get('/wallet-balance', protect, getWalletBalance)
 router.get('/wallet-transactions', protect, getWalletTransactions)
 
-
 // Service Routes
 router.get('/service-categories', getServiceCategories);
 router.get('/service-types', getServiceTypes);
 router.get('/service-type/:id', getServiceType);
 router.post('/payment/create-order', protect, createService);
 router.post('/payment/verify', protect, verifyRazorpay);
+router.post('/payment/wallet-payment', protect, handleWalletPayment);
 router.post('/service/create', protect, seviceRequest);
 router.get('/user-bookings', protect, getUserBookings);
 router.post('/feedback', protect, addFeedback);
@@ -80,7 +81,7 @@ router.put('/cancel-service', protect, cancelService)
 
 // Profile and Address Routes
 router.put('/update-profile', protect, updateProfile);
-router.patch('/update-address', protect, updateAddress);  
+router.put('/update-address', protect, updateAddress);  
 router.get('/addresses', protect, getUserAddresses);
 router.delete('/address/:addressId', protect, deleteAddress);
 router.put('/update-password', protect, updatePassword);
