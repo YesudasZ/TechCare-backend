@@ -17,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 
 const corsOptions = {
-  origin: "https://tech-care-frontend.vercel.app",
+  origin: "https://www.techcare.live",
   methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
   credentials: true,
 };
