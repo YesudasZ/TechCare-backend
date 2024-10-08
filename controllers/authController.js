@@ -11,7 +11,7 @@ const cloudinary = require("../utils/cloudinary.js");
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  "http://localhost:5173"
+  "https://tech-care-frontend.vercel.app"
 );
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000);
 let transporter = nodemailer.createTransport({
