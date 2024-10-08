@@ -17,13 +17,12 @@ const app = express();
 const server = http.createServer(app);
 
 const corsOptions = {
-  origin: ["https://www.techcare.live", "https://techcare.live"],
+  origin: "https://www.techcare.live",
   methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 app.use(cookieParser());
