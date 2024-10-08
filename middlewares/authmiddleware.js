@@ -4,6 +4,7 @@ const generateToken = require("../utils/generateToken.js");
 const protect = async (req, res, next) => {
   const accessToken = req.cookies.accessToken;
   const refreshToken = req.cookies.refreshToken;
+console.log("Token",req.cookies);
 
   if (!accessToken && !refreshToken) {
     return res.status(401).json({ message: "Not authorized, no tokens provided" });
