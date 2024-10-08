@@ -39,6 +39,10 @@ app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/technician", technicianRoutes);
 
+app.use("*", (req, res) => {
+  res.status(200).json({ message: "TechCare API" });
+});
+
 socketHandler(io);
 
 const PORT = process.env.PORT || 3000;
