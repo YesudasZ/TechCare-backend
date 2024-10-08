@@ -11,13 +11,13 @@ const generateToken = (res, userId) => {
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    sameSite: "Lax",
+    sameSite: "None",
     maxAge: 24* 60 * 60 * 1000,
   });
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    sameSite: "Lax",
+    sameSite: "None",
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };
