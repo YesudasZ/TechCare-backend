@@ -401,8 +401,6 @@ const updateProfile = async (req, res) => {
 };
 
 const updateAddress = async (req, res) => {
-  console.log("TEsting for pro");
-  
   try {
     const { street, city, state, country, postalCode, phoneNumber, addressId } =
       req.body;
@@ -417,12 +415,9 @@ const updateAddress = async (req, res) => {
         { new: true }
       );
       if (!address) {
-        console.log("lsjldkfjl");
-
         return res.status(404).json({ message: "Address not found" });
       }
     } else {
-      console.log("lsjldkfjl test okay");
       address = await Address.create({
         user: userId,
         street,

@@ -20,7 +20,6 @@ const listUsers = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(Number(limit))
       .select("-password -otp -otpExpires")
-      .exec();
     const totalUsers = await User.countDocuments(query);
     res.status(200).json({
       users,

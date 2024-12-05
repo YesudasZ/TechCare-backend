@@ -351,7 +351,6 @@ const getServiceRequests = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .exec();
 
     const filteredServices = searchQuery
       ? services.filter(service => service.user !== null)
